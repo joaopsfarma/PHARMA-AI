@@ -1,18 +1,20 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { SYSTEM_PROMPT_DEFAULT } from "../constants.tsx";
+import { SYSTEM_PROMPT } from "../constants.tsx";
 
 export const generateEvolution = async (rawData: string): Promise<string> => {
-  const savedKey = localStorage.getItem('PHARMA_API_KEY');
-  const envKey = (window as any).process?.env?.API_KEY;
-  const apiKey = savedKey || envKey;
+  // Acesso seguro ao process.env para evitar ReferenceError em navegadores puros
+  let apiKey: string | undefined;
   
-  if (!apiKey || apiKey === "undefined") {
-    throw new Error("API_KEY não encontrada. Clique na engrenagem de configurações.");
+  try {
+    apiKey = (window as any).process?.env?.API_KEY || (process as any)?.env?.API_KEY;
+  } catch (e) {
+    console.warn("Ambiente process.env não detectado, tentando métodos alternativos.");
   }
 
-  // Busca o prompt customizado que foi sincronizado do GitHub, ou usa o padrão
-  const customPrompt = localStorage.getItem('PHARMA_CUSTOM_PROMPT') || SYSTEM_PROMPT_DEFAULT;
+  if (!apiKey) {
+    throw new Error("API Key não configurada. Por favor, verifique as configurações do ambiente.");
+  }
 
   const ai = new GoogleGenAI({ apiKey });
   
@@ -21,21 +23,21 @@ export const generateEvolution = async (rawData: string): Promise<string> => {
       model: 'gemini-3-flash-preview',
       contents: rawData,
       config: {
-        systemInstruction: customPrompt,
+        systemInstruction: SYSTEM_PROMPT,
         temperature: 0.1,
       },
     });
 
     if (!response || !response.text) {
-      throw new Error("A IA não conseguiu processar estes dados.");
+      throw new Error("A IA retornou uma resposta vazia.");
     }
 
     return response.text;
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     if (error.message?.includes("403") || error.message?.includes("API key")) {
-      throw new Error("Chave de API inválida.");
+      throw new Error("Sua chave de API parece ser inválida ou não tem permissão para este modelo.");
     }
-    throw new Error("Erro de comunicação com a IA.");
+    throw new Error("Erro ao processar dados com a IA: " + (error.message || "Erro desconhecido"));
   }
 };

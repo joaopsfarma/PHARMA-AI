@@ -3,58 +3,66 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>PharmaAI - Evolução Farmacêutica Inteligente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PharmaAI - Evolução Farmacêutica</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e3a8a">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/822/822143.png">
-    
-    <script>
-      // Mantém compatibilidade com bibliotecas que buscam 'process'
-      window.process = { env: { NODE_ENV: 'production' } };
-    </script>
-
+    <meta name="theme-color" content="#1e40af">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@^19.2.4",
-        "react-dom": "https://esm.sh/react-dom@^19.2.4",
-        "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
-        "@google/genai": "https://esm.sh/@google/genai@^1.42.0",
-        "lucide-react": "https://esm.sh/lucide-react@^0.575.0",
-        "react/": "https://esm.sh/react@^19.2.4/",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-      }
-    }
-    </script>
     <style>
-      /* Esconder scrollbars em excesso para parecer app nativo */
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-      .dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
-      
-      body {
-        overscroll-behavior-y: contain;
-        -webkit-tap-highlight-color: transparent;
+      #error-display {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: #fff; color: #d32f2f;
+        padding: 20px; z-index: 9999;
+        font-family: monospace; overflow: auto;
       }
     </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@1.42.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0?external=react",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
   </head>
-  <body class="bg-slate-50 text-slate-800 antialiased h-screen overflow-hidden select-none">
+  <body class="bg-slate-50 text-slate-800 antialiased h-screen overflow-hidden">
+    <div id="error-display">
+      <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Ocorreu um erro ao carregar o aplicativo:</h1>
+      <pre id="error-content"></pre>
+      <button onclick="location.reload()" style="margin-top: 1rem; padding: 10px 20px; background: #1e40af; color: white; border: none; border-radius: 5px; cursor: pointer;">Tentar Novamente</button>
+    </div>
+
     <div id="root">
-      <div class="flex flex-col items-center justify-center h-screen space-y-4">
-        <div class="w-12 h-12 border-4 border-blue-600/10 border-t-blue-600 rounded-full animate-spin"></div>
-        <p class="text-slate-400 font-bold text-[10px] tracking-widest uppercase">Inicializando PharmaAI...</p>
+      <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-slate-500 font-medium animate-pulse">Inicializando PharmaAI...</p>
+        <p class="text-slate-400 text-xs mt-2">Isso pode levar alguns segundos na primeira vez</p>
       </div>
     </div>
-    <script type="module" src="index.tsx"></script>
+
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW error:', err));
-        });
-      }
+      // Captura erros globais e exibe na tela para diagnóstico
+      window.onerror = function(msg, url, line, col, error) {
+        const display = document.getElementById('error-display');
+        const content = document.getElementById('error-content');
+        display.style.display = 'block';
+        content.textContent = `${msg}\n\nLocal: ${url}:${line}:${col}\n\nStack: ${error?.stack || 'N/A'}`;
+        return false;
+      };
+      window.onunhandledrejection = function(event) {
+        const display = document.getElementById('error-display');
+        const content = document.getElementById('error-content');
+        display.style.display = 'block';
+        content.textContent = `Erro em Promessa: ${event.reason}`;
+      };
     </script>
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>

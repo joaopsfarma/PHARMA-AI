@@ -1,5 +1,5 @@
 
-export const SYSTEM_PROMPT = `Você é um Farmacêutico Clínico Especialista atuando em UTI.
+export const SYSTEM_PROMPT_DEFAULT = `Você é um Farmacêutico Clínico Especialista atuando em UTI.
 Seu objetivo é ler os dados clínicos brutos fornecidos pelo usuário (evolução médica, histórico, exames, lista de medicamentos) e gerar a Evolução Farmacêutica estruturada.
 
 A sua resposta deve conter APENAS a evolução estruturada, sem saudações ou explicações.
@@ -35,5 +35,7 @@ Siga EXATAMENTE o modelo estruturado abaixo:
 2. **...**
 `;
 
+// URL exemplo que aponta para um arquivo raw no GitHub
+export const DEFAULT_SYNC_URL = "https://raw.githubusercontent.com/seu-usuario/pharma-rules/main/rules.txt";
 export const APP_TITLE = "PharmaAI";
 export const APP_SUBTITLE = "Gerador Automático de Evolução Farmacêutica";

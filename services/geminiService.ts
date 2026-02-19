@@ -3,17 +3,17 @@ import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_PROMPT } from "../constants.tsx";
 
 export const generateEvolution = async (rawData: string): Promise<string> => {
-  // Acesso seguro ao process.env para evitar ReferenceError em navegadores puros
-  let apiKey: string | undefined;
+  // Tenta buscar a chave de várias fontes possíveis em ambientes web
+  const apiKey = 
+    (window as any).process?.env?.API_KEY || 
+    (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+    null;
   
-  try {
-    apiKey = (window as any).process?.env?.API_KEY || (process as any)?.env?.API_KEY;
-  } catch (e) {
-    console.warn("Ambiente process.env não detectado, tentando métodos alternativos.");
-  }
-
-  if (!apiKey) {
-    throw new Error("API Key não configurada. Por favor, verifique as configurações do ambiente.");
+  if (!apiKey || apiKey === "undefined" || apiKey === "") {
+    throw new Error(
+      "Configuração Incompleta: A API_KEY não foi encontrada. " +
+      "No Netlify, vá em Site Settings > Environment Variables e adicione API_KEY com seu valor do Google AI Studio."
+    );
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -29,15 +29,20 @@ export const generateEvolution = async (rawData: string): Promise<string> => {
     });
 
     if (!response || !response.text) {
-      throw new Error("A IA retornou uma resposta vazia.");
+      throw new Error("A IA respondeu, mas o conteúdo está vazio.");
     }
 
     return response.text;
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    if (error.message?.includes("403") || error.message?.includes("API key")) {
-      throw new Error("Sua chave de API parece ser inválida ou não tem permissão para este modelo.");
+    console.error("Erro detalhado da API:", error);
+    
+    if (error.message?.includes("403")) {
+      throw new Error("Erro 403: Sua chave de API não tem permissão ou foi bloqueada.");
     }
-    throw new Error("Erro ao processar dados com a IA: " + (error.message || "Erro desconhecido"));
+    if (error.message?.includes("API key not found")) {
+      throw new Error("Chave de API inválida. Verifique se copiou corretamente do Google AI Studio.");
+    }
+    
+    throw new Error("Erro na IA: " + (error.message || "Conexão interrompida."));
   }
 };
